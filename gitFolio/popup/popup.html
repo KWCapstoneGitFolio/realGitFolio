@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GitFolio - Repository Analyzer</title>
+  <link rel="stylesheet" href="popup.css">
+  <script src="../lib/marked.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>레포지토리 개요 생성</h1>
+    
+    <div id="error-message" class="error-message" style="display: none;"></div>
+    
+    <form id="repo-form">
+      <div class="form-group">
+        <label for="owner">Repository Owner</label>
+        <input type="text" id="owner" name="owner" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="repo">Repository Name</label>
+        <input type="text" id="repo" name="repo" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="username">GitHub Username</label>
+        <input type="text" id="username" name="username" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="count">Commit Count</label>
+        <input type="number" id="count" name="count" min="1" value="20">
+      </div>
+      
+      <div class="form-actions">
+        <button type="submit" id="generate-btn">개요 생성</button>
+        <button type="button" id="auto-fill-btn">현재 페이지에서 가져오기</button>
+      </div>
+    </form>
+
+    <div id="loading" class="loading" style="display: none;">
+      <div class="spinner"></div>
+      <p>서버에서 분석 중입니다. 잠시만 기다려주세요...</p>
+    </div>
+
+    <div id="result-container" style="display: none;">
+      <h2>커밋 분석 결과</h2>
+      <div id="analysis-result" class="analysis-result"></div>
+      
+      <div class="result-actions">
+        <button id="copy-btn">결과 복사</button>
+        <button id="download-btn">Markdown 다운로드</button>
+        <button id="save-btn">저장하기</button>
+      </div>
+    </div>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>

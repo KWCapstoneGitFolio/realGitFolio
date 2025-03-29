@@ -1,0 +1,37 @@
+{
+    "name": "GitFolio - Repository Analyzer",
+    "version": "1.0",
+    "description": "GitHub 레포지토리 커밋을 분석하여 프로젝트 개요 및 포트폴리오를 생성합니다.",
+    "manifest_version": 3,
+    "permissions": [
+      "storage",
+      "activeTab",
+      "tabs"
+    ],
+    "host_permissions": [
+      "http://localhost:8000/*",    // 개발 서버 주소
+      "https://your-backend-domain.com/*",  // 프로덕션 서버 주소
+      "https://github.com/*"
+    ],
+    "action": {
+      "default_popup": "popup/popup.html",
+      "default_icon": {
+        "16": "icons/icon16.png",
+        "48": "icons/icon48.png",
+        "128": "icons/icon128.png"
+      }
+    },
+    "content_scripts": [
+      {
+        "matches": ["https://github.com/*/*"],
+        "js": ["content/content.js"]
+      }
+    ],
+    "options_page": "options/options.html",
+    "web_accessible_resources": [
+      {
+        "resources": ["lib/marked.min.js"],
+        "matches": ["<all_urls>"]
+      }
+    ]
+  }

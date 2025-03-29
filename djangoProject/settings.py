@@ -25,7 +25,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
+    'corsheaders',
     # allauth 추가
     "allauth",
     "allauth.account",
@@ -59,6 +59,7 @@ SOCIALACCOUNT_PROVIDERS = {
 }
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -71,6 +72,16 @@ MIDDLEWARE = [
     "allauth.account.middleware.AccountMiddleware",
 ]
 
+CORS_ALLOW_ALL_ORIGINS = True  # 개발 중에만 사용!!!!!! 
+CORS_ALLOWED_ORIGINS = [
+    "chrome-extension://foeoeganoehmpcahojbggnccjocpfnff",
+]
+
+CORS_ALLOW_CREDENTIALS = True
+
+CSRF_TRUSTED_ORIGINS = [
+    "chrome-extension://foeoeganoehmpcahojbggnccjocpfnff",
+]
 ROOT_URLCONF = 'djangoProject.urls'
 
 TEMPLATES = [

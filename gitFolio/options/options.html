@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GitFolio - 설정</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 20px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    
+    h1 {
+      margin-bottom: 24px;
+    }
+    
+    .form-group {
+      margin-bottom: 16px;
+    }
+    
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    
+    input[type="text"] {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    
+    button {
+      padding: 8px 16px;
+      background-color: #0366d6;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    button:hover {
+      background-color: #024ea7;
+    }
+    
+    .status {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 4px;
+    }
+    
+    .success {
+      background-color: #e6ffed;
+      color: #22863a;
+    }
+    
+    .error {
+      background-color: #ffebee;
+      color: #d32f2f;
+    }
+  </style>
+</head>
+<body>
+  <h1>GitFolio 설정</h1>
+  
+  <div class="form-group">
+    <label for="backend-url">백엔드 서버 URL</label>
+    <input type="text" id="backend-url" placeholder="http://localhost:8000">
+    <p>
+      <small>
+        GitFolio Django 백엔드 서버의 URL을 입력하세요. (예: http://localhost:8000)
+      </small>
+    </p>
+  </div>
+  
+  <div class="form-group">
+    <label for="github-username">GitHub 사용자명 (기본값)</label>
+    <input type="text" id="github-username" placeholder="사용자명">
+    <p>
+      <small>
+        저장소 분석 시 기본으로 입력될 GitHub 사용자명을 입력하세요.
+      </small>
+    </p>
+  </div>
+  
+  <button id="save-btn">설정 저장</button>
+  
+  <div id="status" class="status" style="display: none;"></div>
+  
+  <script src="options.js"></script>
+</body>
+</html>
