@@ -22,4 +22,5 @@ urlpatterns = [
     path("", home, name="home"),  # 기본 페이지 추가
     path('admin/', admin.site.urls),
     path("accounts/", include("allauth.urls")),  # GitHub OAuth 관련 URL 추가
+    path("overview/", include("overview.urls")),  # 레포지토리 개요 관련 URL 추가
 ]

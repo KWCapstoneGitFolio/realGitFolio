@@ -31,6 +31,8 @@ INSTALLED_APPS = [
     "allauth.account",
     "allauth.socialaccount",
     "allauth.socialaccount.providers.github",
+
+    "overview",  # 추가: 레포지토리 개요 기능 앱
 ]
 
 AUTHENTICATION_BACKENDS = [
