@@ -2,7 +2,7 @@
 
 # 서버 실행 방법
 [1] MySQL Command Line에서 mysql>을 입력하고 아래 쿼리문를 실행합니다.  
-  CREATE DATABASE gitfolio_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;  
+  CREATE DATABASE gitfolio_db(DB 이름) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;  
 [2] cmd에서 해당 폴더의 경로로 이동하여 아래 명령어를 실행합니다.  
   python manage.py runserver  
 
