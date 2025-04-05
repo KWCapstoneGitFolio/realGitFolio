@@ -4,18 +4,20 @@
     <meta charset="UTF-8">
     <title>레포지토리 개요 생성</title>
     <style>
-      /* Markdown을 HTML로 변환한 결과의 기본 스타일 예시 */
-      body { font-family: sans-serif; line-height: 1.6; }
-      h1, h2, h3, h4 { margin-top: 1em; }
+      body { font-family: sans-serif; line-height: 1.6; padding: 2rem; }
+      h1, h2, h3, h4 { margin-top: 1.5em; }
       ul { margin: 0; padding-left: 1.5em; }
       code { background: #f4f4f4; padding: 2px 4px; }
+      .error { color: red; }
+      .analysis { border-top: 1px solid #ddd; margin-top: 2rem; padding-top: 1rem; }
+      .markdown-output p { margin: 0 0 1em; }
     </style>
 </head>
 <body>
     <h1>레포지토리 개요 생성</h1>
     
     {% if error %}
-      <p style="color: red;">오류: {{ error }}</p>
+      <p class="error">오류: {{ error }}</p>
     {% endif %}
     
     <form method="post">
@@ -24,9 +26,17 @@
       <button type="submit">개요 생성</button>
     </form>
 
-    {% if analysis %}
-      <h2>커밋 분석 결과</h2>
-      <pre>{{ analysis|safe }}</pre>
+    {% if analysis_md %}
+      <div class="analysis">
+        <h2>커밋 분석 결과</h2>
+        <div class="markdown-output">
+          {{ analysis_md|linebreaksbr|safe }}
+        </div>
+      </div>
+    {% else %}
+      {% if form.is_bound %}
+        <p>분석 결과가 없습니다. 입력하신 정보가 올바른지 확인해주세요.</p>
+      {% endif %}
     {% endif %}
 </body>
 </html>

@@ -1,9 +1,9 @@
 ## realGitFolio
 
 # 서버 실행 방법
-[1] mysql command line에서 CREATE DATABASE [DB명] CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; 쿼리문 실행  
-[2] cmd에서 해당 폴더의 경로로 이동하여 아래 명령어를 실행합니다.
-python manage.py runserver
+[1] cmd에서 해당 폴더의 경로로 이동하여 아래 명령어를 실행합니다.
+ (1) .\venv\Scripts\activate
+ (2) python manage.py runserver
   
 # 레포지토리 개요 부분 실행 방법  
 [2] 인터넷 창에 [host]/overview/generate 주소를 입력합니다.  

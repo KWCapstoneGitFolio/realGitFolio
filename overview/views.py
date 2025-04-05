@@ -1,5 +1,6 @@
 from django.http import JsonResponse
 from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 import json
 from django.middleware.csrf import get_token
@@ -7,8 +8,8 @@ from django.shortcuts import render
 from .forms import RepoOverviewForm
 from .utils import fetch_detailed_commit_history, analyze_commit_messages, format_analysis_md
 
+@csrf_exempt
 @require_POST
-@ensure_csrf_cookie
 def generate_overview_api(request):
     """
     구글 확장 프로그램에서 사용할 JSON API 엔드포인트
@@ -24,7 +25,7 @@ def generate_overview_api(request):
             return JsonResponse({'error': '필수 필드가 누락되었습니다.'}, status=400)
             
         try:
-            commits = fetch_detailed_commit_history(owner, repo, username, count)
+            commits = fetch_detailed_commit_history(owner, repo, count)
             analysis = analyze_commit_messages(commits)
             formatted_analysis = format_analysis_md(analysis)
             
@@ -53,14 +54,11 @@ def generate_overview(request):
         if form.is_valid():
             owner = form.cleaned_data['owner']
             repo = form.cleaned_data['repo']
-            username = form.cleaned_data['username']
             count = form.cleaned_data.get('count') or 20
             try:
-                commits = fetch_detailed_commit_history(owner, repo, username, count)
+                commits = fetch_detailed_commit_history(owner, repo, count)
                 analysis = analyze_commit_messages(commits)
-                formatted_analysis = format_analysis_md(analysis)
-                context['commits'] = commits
-                context['analysis'] = formatted_analysis
+                context['analysis_md'] = format_analysis_md(analysis)
             except Exception as e:
                 context['error'] = str(e)
     else:
