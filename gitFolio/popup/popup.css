@@ -131,3 +131,36 @@ body {
   #save-btn {
     background-color: #28a745;
   }
+  /* popup.css에 추가 */
+.popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.popup-header h1 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.icon-button {
+  background-color: #0366d6;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+}
+
+.icon-button:hover {
+  background-color: #0353b4;
+}
+
+.icon-button svg {
+  margin-right: 5px;
+}

@@ -1,37 +1,59 @@
 {
-    "name": "GitFolio - Repository Analyzer",
-    "version": "1.0",
-    "description": "GitHub 레포지토리 커밋을 분석하여 프로젝트 개요 및 포트폴리오를 생성합니다.",
-    "manifest_version": 3,
-    "permissions": [
-      "storage",
-      "activeTab",
-      "tabs"
-    ],
-    "host_permissions": [
-      "http://localhost:8000/*",    // 개발 서버 주소
-      "https://your-backend-domain.com/*",  // 프로덕션 서버 주소
-      "https://github.com/*"
-    ],
-    "action": {
-      "default_popup": "popup/popup.html",
-      "default_icon": {
-        "16": "icons/icon16.png",
-        "48": "icons/icon48.png",
-        "128": "icons/icon128.png"
-      }
+  "name": "GitFolio - Repository Analyzer",
+  "version": "1.1",
+  "description": "GitHub 레포지토리 커밋을 분석하여 프로젝트 개요 및 포트폴리오를 생성합니다.",
+  "manifest_version": 3,
+  "permissions": [
+    "storage",
+    "activeTab",
+    "tabs",
+    "sidePanel"
+  ],
+  "host_permissions": [
+    "http://localhost:8000/*",
+    "https://github.com/*"
+  ],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "side_panel": {
+    "default_path": "sidepanel/sidepanel.html"
+  },
+  "background": {
+    "service_worker": "background/background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://github.com/*/*"],
+      "js": ["content/content.js"]
+    }
+  ],
+  "options_page": "options/options.html",
+  "web_accessible_resources": [
+    {
+      "resources": ["lib/marked.min.js", "icons/*", "sidepanel/*"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+G",
+        "mac": "Command+Shift+G"
+      },
+      "description": "GitFolio 확장 기능 실행"
     },
-    "content_scripts": [
-      {
-        "matches": ["https://github.com/*/*"],
-        "js": ["content/content.js"]
-      }
-    ],
-    "options_page": "options/options.html",
-    "web_accessible_resources": [
-      {
-        "resources": ["lib/marked.min.js"],
-        "matches": ["<all_urls>"]
-      }
-    ]
+    "toggle_side_panel": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+S",
+        "mac": "Command+Shift+S"
+      },
+      "description": "GitFolio 사이드 패널 열기/닫기"
+    }
   }
+}

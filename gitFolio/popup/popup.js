@@ -21,7 +21,27 @@ document.addEventListener('DOMContentLoaded', function() {
         });
       });
     }
-  
+    // 사이드 패널 열기 버튼
+const openSidepanelButton = document.getElementById('open-sidepanel');
+if (openSidepanelButton) {
+  openSidepanelButton.addEventListener('click', function() {
+    chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+      if (tabs && tabs[0]) {
+        chrome.runtime.sendMessage({ 
+          action: 'openSidePanel', 
+          windowId: tabs[0].windowId 
+        }, function(response) {
+          if (response && response.success) {
+            // 사이드 패널이 열렸으면 팝업 닫기
+            window.close();
+          } else {
+            console.error('사이드 패널을 열 수 없습니다:', response ? response.error : '알 수 없는 오류');
+          }
+        });
+      }
+    });
+  });
+}
     // 현재 GitHub 페이지에서 레포지토리 정보 가져오기
     autoFillBtn.addEventListener('click', function() {
       console.log("자동 채우기 버튼 클릭됨");

@@ -94,7 +94,7 @@ def analyze_commit_messages(commits):
         "anthropic-version": "2023-06-01" # 올바른 버전 문자열로 수정
     }
     data = {
-        "model": "claude-3-haiku-20240307",
+        "model": "claude-3-7-sonnet-20250219",
         "system": "Optional system prompt if needed",  # 시스템 프롬프트를 최상위 필드로 전달
         "messages": [
           {"role": "user", "content": prompt}

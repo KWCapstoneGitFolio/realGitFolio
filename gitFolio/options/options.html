@@ -12,10 +12,37 @@
       padding: 20px;
       max-width: 800px;
       margin: 0 auto;
+      color: #24292e;
     }
     
     h1 {
       margin-bottom: 24px;
+      color: #0366d6;
+    }
+    
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid #e1e4e8;
+      margin-bottom: 20px;
+    }
+    
+    .tab {
+      padding: 8px 16px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    
+    .tab.active {
+      border-bottom: 2px solid #0366d6;
+      color: #0366d6;
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
     }
     
     .form-group {
@@ -28,67 +55,215 @@
       margin-bottom: 8px;
     }
     
-    input[type="text"] {
+    input[type="text"], input[type="password"], select {
       width: 100%;
       padding: 8px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
+      border: 1px solid #e1e4e8;
+      border-radius: 6px;
+      box-sizing: border-box;
+    }
+    
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      margin-top: 8px;
+    }
+    
+    .checkbox-group input[type="checkbox"] {
+      margin-right: 8px;
+    }
+    
+    .helper-text {
+      font-size: 12px;
+      color: #6a737d;
+      margin-top: 4px;
     }
     
     button {
       padding: 8px 16px;
-      background-color: #0366d6;
+      background-color: #2ea44f;
       color: white;
       border: none;
-      border-radius: 4px;
+      border-radius: 6px;
       cursor: pointer;
+      font-weight: 500;
+      transition: background-color 0.2s;
     }
     
     button:hover {
-      background-color: #024ea7;
+      background-color: #2c974b;
+    }
+    
+    .button-row {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 24px;
+    }
+    
+    .secondary-button {
+      background-color: #6a737d;
+    }
+    
+    .secondary-button:hover {
+      background-color: #586069;
+    }
+    
+    .danger-button {
+      background-color: #d73a49;
+    }
+    
+    .danger-button:hover {
+      background-color: #cb2431;
     }
     
     .status {
       margin-top: 16px;
       padding: 12px;
-      border-radius: 4px;
+      border-radius: 6px;
     }
     
     .success {
       background-color: #e6ffed;
       color: #22863a;
+      border: 1px solid #34d058;
     }
     
     .error {
-      background-color: #ffebee;
-      color: #d32f2f;
+      background-color: #ffeef0;
+      color: #d73a49;
+      border: 1px solid #f97583;
+    }
+    
+    .info {
+      background-color: #f1f8ff;
+      color: #0366d6;
+      border: 1px solid #79b8ff;
+    }
+    
+    .token-section {
+      background-color: #f6f8fa;
+      border-radius: 6px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    
+    .token-helper {
+      margin-top: 12px;
+    }
+    
+    .token-helper a {
+      color: #0366d6;
+      text-decoration: none;
+    }
+    
+    .token-helper a:hover {
+      text-decoration: underline;
     }
   </style>
 </head>
 <body>
   <h1>GitFolio 설정</h1>
   
-  <div class="form-group">
-    <label for="backend-url">백엔드 서버 URL</label>
-    <input type="text" id="backend-url" placeholder="http://localhost:8000">
-    <p>
-      <small>
+  <div class="tabs">
+    <div class="tab active" data-tab="general">기본 설정</div>
+    <div class="tab" data-tab="github">GitHub 설정</div>
+    <div class="tab" data-tab="appearance">표시 설정</div>
+  </div>
+  
+  <div id="general" class="tab-content active">
+    <div class="form-group">
+      <label for="backend-url">백엔드 서버 URL</label>
+      <input type="text" id="backend-url" placeholder="http://localhost:8000">
+      <p class="helper-text">
         GitFolio Django 백엔드 서버의 URL을 입력하세요. (예: http://localhost:8000)
-      </small>
-    </p>
+      </p>
+    </div>
+    
+    <div class="form-group">
+      <label for="auto-update">자동 업데이트 설정</label>
+      <div class="checkbox-group">
+        <input type="checkbox" id="auto-update">
+        <span>데이터 자동 업데이트 사용</span>
+      </div>
+      <p class="helper-text">
+        GitHub 페이지 방문 시 자동으로 데이터를 업데이트합니다. 비활성화하면 수동으로 새로고침해야 합니다.
+      </p>
+    </div>
   </div>
   
-  <div class="form-group">
-    <label for="github-username">GitHub 사용자명 (기본값)</label>
-    <input type="text" id="github-username" placeholder="사용자명">
-    <p>
-      <small>
+  <div id="github" class="tab-content">
+    <div class="form-group">
+      <label for="github-username">GitHub 사용자명</label>
+      <input type="text" id="github-username" placeholder="사용자명">
+      <p class="helper-text">
         저장소 분석 시 기본으로 입력될 GitHub 사용자명을 입력하세요.
-      </small>
-    </p>
+      </p>
+    </div>
+    
+    <div class="token-section">
+      <div class="form-group">
+        <label for="github-token">GitHub 개인 액세스 토큰</label>
+        <input type="password" id="github-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxx">
+        <div class="token-helper">
+          <p class="helper-text">
+            비공개 저장소 접근 및 API 요청 제한 증가를 위해 GitHub 토큰이 필요합니다.
+            <a href="https://github.com/settings/tokens" target="_blank">여기에서 토큰 생성</a>
+          </p>
+          <p class="helper-text">
+            필요한 권한: <strong>repo</strong>, <strong>read:user</strong>
+          </p>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="token-scope">토큰 저장 범위</label>
+        <select id="token-scope">
+          <option value="local">이 기기에만 저장 (권장)</option>
+          <option value="sync">모든 기기에 동기화</option>
+        </select>
+        <p class="helper-text">
+          토큰은 안전하게 저장되지만, 공유 기기를 사용하는 경우 '이 기기에만 저장'을 권장합니다.
+        </p>
+      </div>
+    </div>
   </div>
   
-  <button id="save-btn">설정 저장</button>
+  <div id="appearance" class="tab-content">
+    <div class="form-group">
+      <label for="ui-mode">UI 모드</label>
+      <select id="ui-mode">
+        <option value="popup">팝업 모드 (기본)</option>
+        <option value="sidebar">사이드바 모드</option>
+        <option value="both">둘 다 사용</option>
+      </select>
+      <p class="helper-text">
+        GitFolio UI를 표시할 방식을 선택하세요. 사이드바 모드는 화면 오른쪽에 고정됩니다.
+      </p>
+    </div>
+    
+    <div class="form-group">
+      <label for="theme">테마</label>
+      <select id="theme">
+        <option value="auto">시스템 설정에 따름 (기본)</option>
+        <option value="light">라이트 모드</option>
+        <option value="dark">다크 모드</option>
+      </select>
+    </div>
+    
+    <div class="form-group">
+      <label for="font-size">글꼴 크기</label>
+      <select id="font-size">
+        <option value="small">작게</option>
+        <option value="medium" selected>중간 (기본)</option>
+        <option value="large">크게</option>
+      </select>
+    </div>
+  </div>
+  
+  <div class="button-row">
+    <button id="reset-btn" class="secondary-button">기본값으로 초기화</button>
+    <button id="save-btn">설정 저장</button>
+  </div>
   
   <div id="status" class="status" style="display: none;"></div>
   
