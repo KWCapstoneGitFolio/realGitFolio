@@ -131,7 +131,61 @@ body {
   #save-btn {
     background-color: #28a745;
   }
-  /* popup.css에 추가 */
+  
+.commit-list-section {
+  margin: 20px 0;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  padding: 16px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.commit-list-section h3 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  font-size: 18px;
+}
+
+.commit-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.commit-item {
+  padding: 10px;
+  border-radius: 4px;
+  background-color: white;
+  border-left: 3px solid #0366d6;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.commit-message {
+  font-weight: 500;
+  margin-bottom: 6px;
+  color: #24292e;
+}
+
+.commit-details {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #586069;
+}
+
+.commit-stats {
+  display: flex;
+  gap: 8px;
+}
+
+.additions {
+  color: #28a745;
+}
+
+.deletions {
+  color: #d73a49;
+}
 .popup-header {
   display: flex;
   justify-content: space-between;
