@@ -271,7 +271,8 @@ async function analyzeWithBackend(commits) {
   const backendUrl = await getBackendUrl();
   
   try {
-    const response = await fetch(`${backendUrl}/api/analyze-commits/`, {
+    // 수정된 부분: URL 경로 변경
+    const response = await fetch(`${backendUrl}/overview/api/generate/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"

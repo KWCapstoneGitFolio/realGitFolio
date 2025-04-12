@@ -75,12 +75,14 @@ MIDDLEWARE = [
 CORS_ALLOW_ALL_ORIGINS = True  # 개발 중에만 사용!!!!!! 
 CORS_ALLOWED_ORIGINS = [
     "chrome-extension://foeoeganoehmpcahojbggnccjocpfnff",
+    "chrome-extension://ncjngnacligabfbdnncljahbahgngemb",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
 
 CSRF_TRUSTED_ORIGINS = [
     "chrome-extension://foeoeganoehmpcahojbggnccjocpfnff",
+    "chrome-extension://ncjngnacligabfbdnncljahbahgngemb",
 ]
 ROOT_URLCONF = 'djangoProject.urls'
 
