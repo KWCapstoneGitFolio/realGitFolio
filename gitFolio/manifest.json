@@ -3,6 +3,8 @@
   "version": "1.1",
   "description": "GitHub 레포지토리 커밋을 분석하여 프로젝트 개요 및 포트폴리오를 생성합니다.",
   "manifest_version": 3,
+  "key": "foeoeganoehmpcahojbggnccjocpfnff",
+  "id": "foeoeganoehmpcahojbggnccjocpfnff",
   "permissions": [
     "storage",
     "activeTab",
