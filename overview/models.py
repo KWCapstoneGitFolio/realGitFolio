@@ -2,8 +2,8 @@ from django.db import models
 from django.utils import timezone
 
 class Repository(models.Model):
-    owner = models.CharField(max_length=100)
-    name = models.CharField(max_length=100)
+    owner = models.CharField(max_length=100, default='Unknown')
+    name = models.CharField(max_length=100, default='Unknown')
     description = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
