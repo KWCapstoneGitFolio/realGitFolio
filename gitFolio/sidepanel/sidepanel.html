@@ -15,47 +15,76 @@
     
     <div id="error-message" class="error-message" style="display: none;"></div>
     
-    <form id="repo-form">
-      <div class="form-group">
-        <label for="owner">Repository Owner</label>
-        <input type="text" id="owner" name="owner" required>
+    <!-- 로그인 화면 -->
+    <div id="login-container" class="login-container">
+      <div class="login-header">
+        <img src="../images/icon128.png" alt="GitFolio 로고" class="login-logo">
+        <h2>GitHub 분석 및 포트폴리오 생성 도구</h2>
       </div>
-      
-      <div class="form-group">
-        <label for="repo">Repository Name</label>
-        <input type="text" id="repo" name="repo" required>
+      <p class="login-description">
+        GitHub 저장소의 커밋을 분석하여 프로젝트 개요를 자동으로 생성합니다.
+        더 나은 경험을 위해 GitHub 계정으로 로그인하세요.
+      </p>
+      <div class="login-buttons">
+        <button id="github-login-btn" class="github-login-btn">
+          <img src="../images/github-mark.png" alt="GitHub" class="github-icon">
+          Login with GitHub
+        </button>
+        <button id="skip-login-btn" class="skip-login-btn">로그인 없이 사용해보기</button>
       </div>
-      
-      <div class="form-group">
-        <label for="username">GitHub Username</label>
-        <input type="text" id="username" name="username" required>
-      </div>
-      
-      <div class="form-group">
-        <label for="count">Commit Count</label>
-        <input type="number" id="count" name="count" min="1" value="20">
-      </div>
-      
-      <div class="form-actions">
-        <button type="submit" id="generate-btn">개요 생성</button>
-        <button type="button" id="auto-fill-btn">현재 페이지에서 가져오기</button>
-      </div>
-    </form>
-
-    <div id="loading" class="loading" style="display: none;">
-      <div class="spinner"></div>
-      <p>서버에서 분석 중입니다. 잠시만 기다려주세요...</p>
     </div>
+    
+    <!-- 메인 분석 화면 -->
+    <div id="main-container" style="display: none;">
+      <form id="repo-form">
+        <div class="form-group">
+          <label for="owner">Repository Owner</label>
+          <input type="text" id="owner" name="owner" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="repo">Repository Name</label>
+          <input type="text" id="repo" name="repo" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="username">GitHub Username</label>
+          <input type="text" id="username" name="username" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="count">Commit Count</label>
+          <input type="number" id="count" name="count" min="1" value="20">
+        </div>
+        
+        <div id="no-login-warning" class="warning-message" style="display: none;">
+          <p>GitHub 로그인 없이 사용 중입니다. API 호출 제한이 있을 수 있습니다.</p>
+        </div>
+        
+        <div class="form-actions">
+          <button type="submit" id="generate-btn">개요 생성</button>
+          <button type="button" id="auto-fill-btn">현재 페이지에서 가져오기</button>
+        </div>
+      </form>
 
-    <div id="result-container" style="display: none;">
-      <h2>커밋 분석 결과</h2>
-      <div id="analysis-result" class="analysis-result"></div>
-      
-      <div class="result-actions">
-        <button id="copy-btn">결과 복사</button>
-        <button id="download-btn">Markdown 다운로드</button>
-        <button id="save-btn">저장하기</button>
+      <div id="loading" class="loading" style="display: none;">
+        <div class="spinner"></div>
+        <p>서버에서 분석 중입니다. 잠시만 기다려주세요...</p>
       </div>
+
+      <div id="result-container" style="display: none;">
+        <h2>커밋 분석 결과</h2>
+        <div id="analysis-result" class="analysis-result"></div>
+        
+        <div class="result-actions">
+          <button id="copy-btn">결과 복사</button>
+          <button id="download-btn">Markdown 다운로드</button>
+          <button id="save-btn">저장하기</button>
+        </div>
+      </div>
+      
+      <!-- 커밋 목록 섹션 추가 -->
+      <div id="commit-list" class="commit-list-section" style="display: none;"></div>
     </div>
   </div>
   

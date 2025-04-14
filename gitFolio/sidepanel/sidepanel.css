@@ -7,6 +7,7 @@
   --light-gray: #f6f8fa;
   --error-color: #d73a49;
   --success-color: #28a745;
+  --warning-color: #f9c513;
 }
 
 * {
@@ -47,6 +48,97 @@ h2 {
   margin-bottom: 10px;
 }
 
+/* 로그인 화면 스타일 */
+.login-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 20px 10px;
+}
+
+.login-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.login-logo {
+  width: 64px;
+  height: 64px;
+  margin-bottom: 12px;
+}
+
+.login-description {
+  color: #586069;
+  margin-bottom: 24px;
+  font-size: 14px;
+  line-height: 1.5;
+  max-width: 400px;
+}
+
+.login-buttons {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 300px;
+  gap: 12px;
+}
+
+.github-login-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #24292e;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.github-login-btn:hover {
+  background-color: #000000;
+}
+
+.github-icon {
+  width: 20px;
+  height: 20px;
+  margin-right: 8px;
+  filter: invert(1);
+}
+
+.skip-login-btn {
+  background-color: var(--light-gray);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 10px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.skip-login-btn:hover {
+  background-color: #e1e4e8;
+}
+
+/* 경고 메시지 */
+.warning-message {
+  background-color: #fff8e1;
+  color: #856404;
+  border: 1px solid #ffeeba;
+  border-radius: 4px;
+  padding: 8px 12px;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+/* 메인 폼 스타일 */
 .form-group {
   margin-bottom: 12px;
 }
@@ -169,6 +261,7 @@ button:hover {
   font-size: 14px;
 }
 
+/* 토스트 메시지 */
 .toast {
   position: fixed;
   bottom: 20px;
@@ -193,13 +286,75 @@ button:hover {
   transform: translateX(-50%) translateY(0);
 }
 
-/* 사이드 패널에 특화된 스타일 */
+/* 커밋 목록 스타일 */
+.commit-list-section {
+  margin-top: 24px;
+  border-top: 1px solid var(--border-color);
+  padding-top: 16px;
+}
+
+.commit-list-section h3 {
+  font-size: 16px;
+  margin-bottom: 12px;
+}
+
+.commit-container {
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.commit-item {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--light-gray);
+}
+
+.commit-item:last-child {
+  border-bottom: none;
+}
+
+.commit-message {
+  font-weight: 500;
+  margin-bottom: 4px;
+  word-break: break-word;
+}
+
+.commit-details {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #586069;
+}
+
+.commit-date {
+  font-style: italic;
+}
+
+.commit-stats {
+  display: flex;
+  gap: 8px;
+}
+
+.additions {
+  color: var(--success-color);
+}
+
+.deletions {
+  color: var(--error-color);
+}
+
+/* 반응형 스타일 */
 @media (max-width: 500px) {
   .form-actions {
     flex-direction: column;
   }
   
   button {
+    width: 100%;
+  }
+  
+  .login-buttons {
     width: 100%;
   }
 }
