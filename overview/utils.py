@@ -112,27 +112,28 @@ def fetch_detailed_commit_history(owner, repo, username, count=20, save_to_db=Tr
         edges = history['edges']
         commit_history = [edge['node'] for edge in edges]
         
-        # Python에서 username으로 필터링
+        # Python에서 username으로 필터링.  
+        # 단, 매칭된 게 없으면 fallback으로 전체 커밋 중 앞(count)개를 사용.
         filtered_commits = []
         if username:
+            uname = username.lower()
             for commit in commit_history:
-                author = commit.get('author', {})
-                author_user = author.get('user', {})
-                author_name = author.get('name', '')
-                author_login = author_user.get('login', '') if author_user else ''
-                author_email = author.get('email', '')
-                
-                # username과 일치하는지 확인 (login, name, email 모두 확인)
-                if (author_login and username.lower() in author_login.lower()) or \
-                   (author_name and username.lower() in author_name.lower()) or \
-                   (author_email and username.lower() in author_email.lower()):
+                author = commit.get('author', {}) or {}
+                user_info = author.get('user') or {}
+                login = user_info.get('login', '').lower()
+                name  = (author.get('name') or '').lower()
+                email = (author.get('email') or '').lower()
+
+                # 정확 일치나 포함 매칭 모두 허용
+                if uname == login or uname == name or uname == email or \
+                   uname in login or uname in name or uname in email:
                     filtered_commits.append(commit)
-                    
-                    # 충분한 커밋을 찾았으면 중단
                     if len(filtered_commits) >= count:
                         break
+            # 매칭된 게 없으면 fallback
+            if not filtered_commits:
+                filtered_commits = commit_history[:count]
         else:
-            # username이 없으면 모든 커밋을 포함 (최대 count 개수만큼)
             filtered_commits = commit_history[:count]
         
         # DB에 저장 옵션이 활성화된 경우

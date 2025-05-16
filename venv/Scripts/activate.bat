@@ -8,7 +8,7 @@ if defined _OLD_CODEPAGE (
     "%SystemRoot%\System32\chcp.com" 65001 > nul
 )
 
-set VIRTUAL_ENV=C:\Users\shs21\OneDrive\바탕 화면\송현섭\대학교 4학년\캡스톤1\realGitFolio-main\venv
+set VIRTUAL_ENV=C:\Users\shs21\git\realGitFolio\venv
 
 if not defined PROMPT set PROMPT=$P$G
 

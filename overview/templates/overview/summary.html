@@ -20,12 +20,19 @@
       <p class="error">오류: {{ error }}</p>
     {% endif %}
     
-    <form method="post">
+    <!-- 1) 개요 생성 폼 -->
+    <form method="post" action="{% url 'generate_overview' %}">
       {% csrf_token %}
       {{ form.as_p }}
       <button type="submit">개요 생성</button>
     </form>
 
+    <!-- 2) 이미 생성된 경우 경고 -->
+    {% if warning %}
+      <p class="warning">⚠️ {{ warning }}</p>
+    {% endif %}
+
+    <!-- 3) 분석 결과 -->
     {% if analysis_md %}
       <div class="analysis">
         <h2>커밋 분석 결과</h2>
@@ -33,10 +40,15 @@
           {{ analysis_md|linebreaksbr|safe }}
         </div>
       </div>
-    {% else %}
-      {% if form.is_bound %}
-        <p>분석 결과가 없습니다. 입력하신 정보가 올바른지 확인해주세요.</p>
-      {% endif %}
+    {% elif form.is_bound %}
+      <p>분석 결과가 없습니다. 입력하신 정보가 올바른지 확인해주세요.</p>
     {% endif %}
+
+    <!-- 4) 저장된 결과 목록 보기 -->
+    <p style="margin-top:2rem;">
+      <a href="{% url 'list_saved_analyses' %}">
+        <button type="button">저장된 결과 목록 보기</button>
+      </a>
+    </p>
 </body>
 </html>

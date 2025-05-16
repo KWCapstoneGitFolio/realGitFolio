@@ -1,64 +1,145 @@
 // 사이드 패널 관리를 위한 백그라운드 스크립트
 chrome.runtime.onInstalled.addListener(function() {
-  // 기본 설정 초기화
+  console.log("확장 프로그램이 설치되었거나 업데이트되었습니다.");
+  
+  // 기본 설정 초기화 - 'popup'에서 'sidebar'로 변경
   chrome.storage.local.get(['uiMode'], function(data) {
     if (!data.uiMode) {
-      chrome.storage.local.set({ uiMode: 'popup' });
+      console.log("UI 모드 기본값 설정: sidebar"); // 여기를 sidebar로 변경
+      chrome.storage.local.set({ uiMode: 'sidebar' }); // 여기를 sidebar로 변경
+    } else {
+      console.log("현재 UI 모드:", data.uiMode);
     }
   });
   
   // 사이드 패널 설정
   if (chrome.sidePanel) {
-    chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: false });
+    console.log("사이드 패널 API 사용 가능, 기본 동작 설정");
+    chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }); // true로 변경
+  } else {
+    console.warn("사이드 패널 API를 사용할 수 없습니다.");
   }
 });
 
 // 메시지 리스너 설정
 chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
+  console.log("메시지 수신:", message);
+  
   // 설정 업데이트 처리
   if (message.action === 'settingsUpdated') {
+    console.log("설정 업데이트:", message.settings);
     handleSettingsUpdate(message.settings);
+    sendResponse({ success: true });
   }
   
   // 팝업에서 사이드패널 열기 요청
-  if (message.action === 'openSidePanel') {
+  else if (message.action === 'openSidePanel') {
+    console.log("사이드 패널 열기 요청, 윈도우 ID:", message.windowId);
+    
     if (chrome.sidePanel) {
-      chrome.sidePanel.open({ windowId: message.windowId });
-      sendResponse({ success: true });
+      try {
+        chrome.sidePanel.open({ windowId: message.windowId })
+          .then(() => {
+            console.log("사이드 패널이 성공적으로 열렸습니다.");
+            sendResponse({ success: true });
+          })
+          .catch(error => {
+            console.error("사이드 패널 열기 실패:", error);
+            sendResponse({ success: false, error: error.toString() });
+          });
+      } catch (error) {
+        console.error("사이드 패널 열기 예외:", error);
+        sendResponse({ success: false, error: error.toString() });
+      }
     } else {
+      console.error("사이드 패널 API를 사용할 수 없습니다.");
       sendResponse({ success: false, error: 'Side panel API not available' });
     }
+    return true; // 비동기 응답을 위해 true 반환
   }
   
   // 레포지토리 분석 요청
-  if (message.action === 'analyzeRepository') {
+  else if (message.action === 'analyzeRepository') {
+    console.log("레포지토리 분석 요청:", message.data);
+    
     analyzeRepository(message.data)
-      .then(result => sendResponse(result))
-      .catch(error => sendResponse({ error: error.message }));
+      .then(result => {
+        console.log("분석 완료, 결과 반환");
+        sendResponse(result);
+      })
+      .catch(error => {
+        console.error("분석 오류:", error);
+        sendResponse({ error: error.message });
+      });
     return true; // 비동기 응답 처리를 위한 true 반환
   }
   
-  return true; // 비동기 응답을 위해 항상 true 반환
+  // 이전 분석 결과 공유 (팝업 <-> 사이드패널)
+  else if (message.action === 'shareAnalysisResult') {
+    console.log("분석 결과 공유");
+    // 저장소에 임시 저장
+    chrome.storage.local.set({ 
+      'lastAnalysisResult': message.data 
+    }, function() {
+      console.log("분석 결과가 저장되었습니다.");
+      // 다른 UI 컴포넌트에 알림
+      chrome.runtime.sendMessage({
+        action: 'analysisResultUpdated',
+        data: message.data
+      });
+      sendResponse({ success: true });
+    });
+    return true;
+  }
+  
+  // 마지막 분석 결과 요청
+  else if (message.action === 'getLastAnalysisResult') {
+    chrome.storage.local.get(['lastAnalysisResult'], function(data) {
+      sendResponse({ 
+        success: true, 
+        data: data.lastAnalysisResult || null 
+      });
+    });
+    return true;
+  }
+  
+  return true; // 모든 메시지에 대해 비동기 응답을 위해 true 반환
 });
 
 // 명령어 처리 (단축키)
 chrome.commands.onCommand.addListener(function(command) {
+  console.log("단축키 명령 수신:", command);
+  
   if (command === 'toggle_side_panel') {
     if (chrome.sidePanel) {
-      // 현재 상태를 확인할 방법이 없으므로 항상 토글 시도
-      chrome.sidePanel.open();
+      console.log("사이드 패널 토글 시도");
+      chrome.sidePanel.open()
+        .then(() => console.log("사이드 패널 열기 성공"))
+        .catch(error => console.error("사이드 패널 열기 실패:", error));
+    } else {
+      console.error("사이드 패널 API를 사용할 수 없습니다.");
     }
   }
 });
 
 // 확장 프로그램 아이콘 클릭 처리
 chrome.action.onClicked.addListener(function(tab) {
+  console.log("확장 프로그램 아이콘 클릭됨, 탭:", tab.id);
+  
   // 설정에 따라 UI 모드 결정
   chrome.storage.local.get(['uiMode'], function(data) {
-    if (data.uiMode === 'sidebar' || data.uiMode === 'both') {
+    console.log("현재 UI 모드:", data.uiMode || 'sidebar'); // 기본값 sidebar로 변경
+    const uiMode = data.uiMode || 'sidebar'; // 기본값 sidebar로 변경
+    
+    if (uiMode === 'sidebar' || uiMode === 'both') {
       // 사이드바 모드면 사이드 패널 열기
       if (chrome.sidePanel) {
-        chrome.sidePanel.open({ windowId: tab.windowId });
+        console.log("사이드 패널 열기 시도");
+        chrome.sidePanel.open({ windowId: tab.windowId })
+          .then(() => console.log("사이드 패널 열기 성공"))
+          .catch(error => console.error("사이드 패널 열기 실패:", error));
+      } else {
+        console.error("사이드 패널 API를 사용할 수 없습니다.");
       }
     }
     
@@ -69,60 +150,43 @@ chrome.action.onClicked.addListener(function(tab) {
 
 // 설정 업데이트 처리
 function handleSettingsUpdate(settings) {
+  console.log("UI 모드 설정 변경:", settings.uiMode);
+  
   // UI 모드에 따라 action 설정 변경
   if (settings.uiMode === 'sidebar') {
     // 사이드바 모드: 아이콘 클릭 시 사이드 패널 열기
+    console.log("사이드바 모드로 설정");
     chrome.action.setPopup({ popup: '' }); // 팝업 비활성화
+    
     if (chrome.sidePanel) {
       chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
     }
   } else if (settings.uiMode === 'popup') {
     // 팝업 모드: 아이콘 클릭 시 팝업 열기
+    console.log("팝업 모드로 설정");
     chrome.action.setPopup({ popup: 'popup/popup.html' });
+    
     if (chrome.sidePanel) {
       chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: false });
     }
   } else if (settings.uiMode === 'both') {
     // 둘 다 사용: 아이콘 클릭 시 팝업 열고, 별도로 사이드 패널도 열기
+    console.log("팝업+사이드바 모드로 설정");
     chrome.action.setPopup({ popup: 'popup/popup.html' });
+    
     if (chrome.sidePanel) {
       chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: false });
     }
   }
 }
 
-// 레포지토리 분석 함수
-async function analyzeRepository(data) {
-  try {
-    // GitHub 토큰 가져오기
-    const token = await getGitHubToken();
-    if (!token) {
-      throw new Error("GitHub 토큰이 설정되지 않았습니다. 옵션 페이지에서 설정해주세요.");
-    }
-    
-    // 1. GitHub API에서 커밋 히스토리 가져오기
-    const commits = await fetchDetailedCommitHistory(
-      data.owner, 
-      data.repo, 
-      data.username, 
-      data.count
-    );
-    
-    // 2. Anthropic API로 커밋 분석
-    const analysis = await analyzeCommitMessages(commits);
-    
-    // 3. 마크다운으로 결과 포맷팅
-    const analysisMarkdown = formatAnalysisMd(analysis);
-    
-    return { 
-      success: true, 
-      analysisMarkdown,
-      analysis
-    };
-  } catch (error) {
-    console.error('Repository 분석 에러:', error);
-    throw error;
-  }
+// 백엔드 URL 가져오기
+async function getBackendUrl() {
+  return new Promise((resolve) => {
+    chrome.storage.local.get(['backendUrl'], function(data) {
+      resolve(data.backendUrl || 'http://localhost:8000');
+    });
+  });
 }
 
 // GitHub 토큰 가져오기
@@ -143,141 +207,30 @@ async function getGitHubToken() {
   });
 }
 
-// Anthropic API 키 가져오기
-async function getAnthropicApiKey() {
-  return new Promise((resolve) => {
-    chrome.storage.local.get(['anthropicApiKey'], function(data) {
-      resolve(data.anthropicApiKey || '');
-    });
-  });
-}
-
-// 백엔드 URL 가져오기
-async function getBackendUrl() {
-  return new Promise((resolve) => {
-    chrome.storage.local.get(['backendUrl'], function(data) {
-      resolve(data.backendUrl || 'http://localhost:8000');
-    });
-  });
-}
-
-// GitHub GraphQL API로 커밋 히스토리 가져오기
-async function fetchDetailedCommitHistory(owner, repo, username, count = 20) {
-  const token = await getGitHubToken();
-  
-  // GraphQL 쿼리 구성
-  const query = `
-    query {
-      repository(owner: "${owner}", name: "${repo}") {
-        defaultBranchRef {
-          target {
-            ... on Commit {
-              history(first: ${count}, author: ${username ? `{emails: ["${username}"]}` : ''}) {
-                edges {
-                  node {
-                    messageHeadline
-                    message
-                    committedDate
-                    changedFiles
-                    additions
-                    deletions
-                    parents(first: 1) {
-                      totalCount
-                    }
-                    author {
-                      name
-                      email
-                      user {
-                        login
-                        avatarUrl
-                      }
-                    }
-                    associatedPullRequests(first: 1) {
-                      nodes {
-                        title
-                        number
-                        url
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  `;
-  
+// 레포지토리 분석 함수
+async function analyzeRepository(data) {
   try {
-    const response = await fetch("https://api.github.com/graphql", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ query })
-    });
+    console.log("레포지토리 분석 시작:", data);
     
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`GitHub API 오류: ${response.status} - ${errorText}`);
-    }
+    // GitHub 토큰 가져오기 (백엔드에 전달하기 위해)
+    const token = await getGitHubToken();
+    const backendUrl = await getBackendUrl();
     
-    const data = await response.json();
+    console.log("백엔드 서버로 분석 요청:", backendUrl);
     
-    // 에러 처리
-    if (data.errors && data.errors.length > 0) {
-      throw new Error(`GitHub GraphQL 에러: ${data.errors[0].message}`);
-    }
-    
-    // 응답 파싱
-    try {
-      const edges = data.data.repository.defaultBranchRef.target.history.edges;
-      return edges.map(edge => edge.node);
-    } catch (error) {
-      throw new Error(`API 응답 구조 오류: ${error.message}`);
-    }
-  } catch (error) {
-    console.error('GitHub API 호출 오류:', error);
-    throw error;
-  }
-}
-
-// 커밋 메시지 분석
-async function analyzeCommitMessages(commits) {
-  // 백엔드 API 사용 설정 확인
-  const useBackend = await checkUseBackendApi();
-  
-  if (useBackend) {
-    return await analyzeWithBackend(commits);
-  } else {
-    return await analyzeWithAnthropicDirect(commits);
-  }
-}
-
-// 백엔드 API 사용 여부 확인
-async function checkUseBackendApi() {
-  return new Promise((resolve) => {
-    chrome.storage.local.get(['useBackendApi'], function(data) {
-      // 기본값은 true (백엔드 API 사용)
-      resolve(data.useBackendApi !== false);
-    });
-  });
-}
-
-// 백엔드를 통한 분석
-async function analyzeWithBackend(commits) {
-  const backendUrl = await getBackendUrl();
-  
-  try {
-    // 수정된 부분: URL 경로 변경
+    // 백엔드 API 호출
     const response = await fetch(`${backendUrl}/overview/api/generate/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ commits })
+      body: JSON.stringify({
+        owner: data.owner,
+        repo: data.repo,
+        username: data.username,
+        count: data.count,
+        github_token: token || undefined  // 토큰이 있을 경우에만 전송
+      })
     });
     
     if (!response.ok) {
@@ -285,177 +238,63 @@ async function analyzeWithBackend(commits) {
       throw new Error(`백엔드 API 오류: ${response.status} - ${errorText}`);
     }
     
-    return await response.json();
-  } catch (error) {
-    console.error('백엔드 API 호출 오류:', error);
-    throw error;
-  }
-}
-
-// Anthropic API 직접 호출을 통한 분석
-async function analyzeWithAnthropicDirect(commits) {
-  const anthropicApiKey = await getAnthropicApiKey();
-  if (!anthropicApiKey) {
-    throw new Error("Anthropic API 키가 설정되지 않았습니다. 옵션 페이지에서 설정해주세요.");
-  }
-  
-  // 커밋 메시지 목록 구성
-  const commitMessagesArray = commits.map(commit => {
-    const date = new Date(commit.committedDate).toISOString().split('T')[0];
-    return {
-      message: commit.message,
-      date: date,
-      files_changed: commit.changedFiles,
-      additions: commit.additions,
-      deletions: commit.deletions
+    const result = await response.json();
+    console.log("백엔드 응답 수신");
+    
+    // 응답 처리
+    return { 
+      success: true, 
+      analysisMarkdown: result.analysis || '',
+      analysis: result
     };
-  });
-  
-  // JSON 형태로 변환
-  const commitsJson = JSON.stringify(commitMessagesArray, null, 2);
-  
-  // Anthropic API 요청 프롬프트 구성
-  const prompt = `아래의 GitHub 커밋 데이터를 분석하여 반드시 아래와 같은 JSON 형식으로 응답해주세요.
-  {
-    "project_overview": "프로젝트 개요 및 핵심 특징에 대한 서술",
-    "contributions": [
-        { "area": "기여 영역", "description": "주요 기술 기여 내용" }
-    ],
-    "tech_stack": ["사용된 기술 스택 목록"],
-    "code_highlights": ["주요 코드 변경 사항 등"]
-  }
-  
-  커밋 데이터:
-  ${commitsJson}`;
-  
-  try {
-    // Anthropic API 호출
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": anthropicApiKey,
-        "anthropic-version": "2023-06-01"
-      },
-      body: JSON.stringify({
-        "model": "claude-3-7-sonnet-20250219", //3.5랑 3.7이랑 가격 같음, 혹시 너무 비싸면 아래 코드로 고치세요 
-        //"model": "claude-3-5-haiku-20241022", //테스트용이여서 클로드 3.5 하이쿠 사용중(소넷 가격 3/15달러 vs 3.5 하이쿠 0.8/4달러). 절대로 변경하지 말것 
-        "system": "커밋 메시지를 분석하여 JSON 형태로 정보를 추출하는 도우미입니다.",
-        "messages": [
-          {"role": "user", "content": prompt}
-        ],
-        "max_tokens": 1500
-      })
-    });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Anthropic API 오류: ${response.status} - ${errorText}`);
-    }
-    
-    const responseData = await response.json();
-    
-    // 응답에서 텍스트 추출
-    let assistantMessage = "";
-    if (responseData.content && Array.isArray(responseData.content)) {
-      for (const item of responseData.content) {
-        if (item.type === "text") {
-          assistantMessage += item.text;
-        }
-      }
-    }
-    
-    if (!assistantMessage) {
-      throw new Error("API 응답에서 텍스트를 찾을 수 없습니다.");
-    }
-    
-    // JSON 추출
-    const jsonMatch = assistantMessage.match(/```json\s*([\s\S]+?)\s*```/) || 
-                      assistantMessage.match(/\{[\s\S]*\}/);
-    
-    try {
-      if (jsonMatch) {
-        const jsonStr = jsonMatch[1] || jsonMatch[0];
-        return JSON.parse(jsonStr);
-      } else {
-        throw new Error("JSON 형식을 찾을 수 없습니다.");
-      }
-    } catch (error) {
-      throw new Error(`JSON 파싱 실패: ${error.message} - 원본 응답: ${assistantMessage.substring(0, 100)}...`);
-    }
   } catch (error) {
-    console.error('Anthropic API 호출 오류:', error);
+    console.error('Repository 분석 에러:', error);
     throw error;
   }
-}
-
-// 분석 결과를 마크다운으로 포맷팅
-function formatAnalysisMd(analysis) {
-  let mdLines = [];
-  
-  // 1. 프로젝트 개요 및 핵심 특징
-  mdLines.push("# 프로젝트 개요 및 핵심 특징");
-  const overview = analysis.project_overview;
-  if (overview) {
-    mdLines.push(overview);
-  } else {
-    mdLines.push("프로젝트 개요 정보가 제공되지 않았습니다.");
-  }
-  mdLines.push("");
-  
-  // 2. 기여 내역
-  mdLines.push("# 기여 내역");
-  const contributions = analysis.contributions;
-  if (contributions && Array.isArray(contributions) && contributions.length > 0) {
-    for (const contrib of contributions) {
-      const area = contrib.area || "정보 없음";
-      const description = contrib.description || "정보 없음";
-      mdLines.push(`## ${area}`);
-      mdLines.push(`${description}`);
-      mdLines.push("");
-    }
-  } else {
-    mdLines.push("기여 내역 정보가 제공되지 않았습니다.");
-  }
-  mdLines.push("");
-  
-  // 3. 기술 스택
-  mdLines.push("# 기술 스택");
-  const techStack = analysis.tech_stack;
-  if (techStack && Array.isArray(techStack) && techStack.length > 0) {
-    mdLines.push("");
-    for (const tech of techStack) {
-      mdLines.push(`- ${tech}`);
-    }
-  } else {
-    mdLines.push("기술 스택 정보가 제공되지 않았습니다.");
-  }
-  mdLines.push("");
-  
-  // 4. 코드 기여 하이라이트
-  mdLines.push("# 코드 기여 하이라이트");
-  const codeHighlights = analysis.code_highlights;
-  if (codeHighlights && Array.isArray(codeHighlights) && codeHighlights.length > 0) {
-    mdLines.push("");
-    for (const highlight of codeHighlights) {
-      mdLines.push(`- ${highlight}`);
-    }
-  } else {
-    mdLines.push("코드 기여 하이라이트 정보가 제공되지 않았습니다.");
-  }
-  
-  return mdLines.join("\n");
 }
 
 // 초기화 함수 - 익스텐션이 로드될 때 실행
 function initialize() {
+  console.log("GitFolio 확장 프로그램 초기화");
+  
   // 설정에 따라 UI 모드 적용
   chrome.storage.local.get(['uiMode'], function(data) {
     if (data.uiMode) {
+      console.log("저장된 UI 모드 적용:", data.uiMode);
       handleSettingsUpdate({ uiMode: data.uiMode });
+    } else {
+      console.log("기본 UI 모드 적용: sidebar"); // 여기를 sidebar로 변경
+      handleSettingsUpdate({ uiMode: 'sidebar' }); // 여기를 sidebar로 변경
     }
   });
+  
+  // 확장 프로그램 시작 시 팝업 설정 초기화
+  chrome.action.setPopup({ popup: '' }); // 비워서 사이드패널 우선 사용
 }
 
 // 초기화 실행
 initialize();
+
+// GitHub 페이지 자동 감지 및 사이드패널 열기 (선택적으로 추가)
+chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
+  if (changeInfo.status === 'complete' && tab.url && tab.url.includes('github.com')) {
+    console.log("GitHub 페이지 감지됨:", tab.url);
+    
+    // UI 모드 확인
+    chrome.storage.local.get(['uiMode', 'autoOpenOnGitHub'], function(data) {
+      const uiMode = data.uiMode || 'sidebar';
+      // autoOpenOnGitHub 설정이 명시적으로 false가 아니면 자동으로 열기 (기본값: true)
+      const shouldAutoOpen = data.autoOpenOnGitHub !== false;
+      
+      if ((uiMode === 'sidebar' || uiMode === 'both') && shouldAutoOpen) {
+        try {
+          chrome.sidePanel.open({ tabId: tab.id })
+            .then(() => console.log("GitHub 페이지에서 사이드패널 자동 열기 성공"))
+            .catch(error => console.error("GitHub 페이지에서 사이드패널 자동 열기 실패:", error));
+        } catch (error) {
+          console.error("사이드패널 자동 열기 오류:", error);
+        }
+      }
+    });
+  }
+});

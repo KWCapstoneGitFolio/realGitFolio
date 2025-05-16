@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const githubTokenInput = document.getElementById('github-token');
   const tokenScopeSelect = document.getElementById('token-scope');
   const autoUpdateCheckbox = document.getElementById('auto-update');
+  const autoOpenGithubCheckbox = document.getElementById('auto-open-github'); // 새로 추가한 요소
   const uiModeSelect = document.getElementById('ui-mode');
   const themeSelect = document.getElementById('theme');
   const fontSizeSelect = document.getElementById('font-size');
@@ -14,12 +15,13 @@ document.addEventListener('DOMContentLoaded', function() {
   const tabs = document.querySelectorAll('.tab');
   const tabContents = document.querySelectorAll('.tab-content');
   
-  // 기본 설정값
+  // 기본 설정값 - 'popup'에서 'sidebar'로 변경
   const defaultSettings = {
     backendUrl: 'http://localhost:8000',
     githubUsername: '',
     autoUpdate: true,
-    uiMode: 'popup',
+    autoOpenOnGitHub: true, // 새로 추가한 설정
+    uiMode: 'sidebar', // 'popup'에서 'sidebar'로 변경
     theme: 'auto',
     fontSize: 'medium',
     tokenScope: 'local'
@@ -42,11 +44,11 @@ document.addEventListener('DOMContentLoaded', function() {
   function loadSettings() {
     // 로컬 스토리지에서 먼저 로드
     chrome.storage.local.get(
-      ['backendUrl', 'githubUsername', 'autoUpdate', 'uiMode', 'theme', 'fontSize', 'tokenScope'],
+      ['backendUrl', 'githubUsername', 'autoUpdate', 'autoOpenOnGitHub', 'uiMode', 'theme', 'fontSize', 'tokenScope'],
       function(localData) {
         // 동기화 스토리지에서 로드 (있으면 병합)
         chrome.storage.sync.get(
-          ['backendUrl', 'githubUsername', 'autoUpdate', 'uiMode', 'theme', 'fontSize'],
+          ['backendUrl', 'githubUsername', 'autoUpdate', 'autoOpenOnGitHub', 'uiMode', 'theme', 'fontSize'],
           function(syncData) {
             // 기본값으로 시작하고 저장된 설정으로 덮어쓰기
             const settings = {...defaultSettings, ...syncData, ...localData};
@@ -60,6 +62,12 @@ document.addEventListener('DOMContentLoaded', function() {
               githubTokenInput.value = tokenData.githubToken || '';
               tokenScopeSelect.value = settings.tokenScope;
               autoUpdateCheckbox.checked = settings.autoUpdate;
+              
+              // 새로 추가한 옵션에 대한 처리
+              if (autoOpenGithubCheckbox) {
+                autoOpenGithubCheckbox.checked = settings.autoOpenOnGitHub !== false; // 기본값은 true
+              }
+              
               uiModeSelect.value = settings.uiMode;
               themeSelect.value = settings.theme;
               fontSizeSelect.value = settings.fontSize;
@@ -78,6 +86,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const githubToken = githubTokenInput.value.trim();
     const tokenScope = tokenScopeSelect.value;
     const autoUpdate = autoUpdateCheckbox.checked;
+    
+    // 새로 추가한 옵션에 대한 값 가져오기
+    const autoOpenOnGitHub = autoOpenGithubCheckbox ? autoOpenGithubCheckbox.checked : true;
+    
     const uiMode = uiModeSelect.value;
     const theme = themeSelect.value;
     const fontSize = fontSizeSelect.value;
@@ -100,6 +112,7 @@ document.addEventListener('DOMContentLoaded', function() {
       backendUrl,
       githubUsername,
       autoUpdate,
+      autoOpenOnGitHub, // 새로 추가한 설정
       uiMode,
       theme,
       fontSize,
@@ -113,6 +126,7 @@ document.addEventListener('DOMContentLoaded', function() {
         backendUrl,
         githubUsername,
         autoUpdate,
+        autoOpenOnGitHub, // 새로 추가한 설정
         uiMode,
         theme,
         fontSize
@@ -149,6 +163,12 @@ document.addEventListener('DOMContentLoaded', function() {
       githubTokenInput.value = '';
       tokenScopeSelect.value = defaultSettings.tokenScope;
       autoUpdateCheckbox.checked = defaultSettings.autoUpdate;
+      
+      // 새로 추가한 옵션에 대한 UI 업데이트
+      if (autoOpenGithubCheckbox) {
+        autoOpenGithubCheckbox.checked = defaultSettings.autoOpenOnGitHub;
+      }
+      
       uiModeSelect.value = defaultSettings.uiMode;
       themeSelect.value = defaultSettings.theme;
       fontSizeSelect.value = defaultSettings.fontSize;
@@ -159,6 +179,12 @@ document.addEventListener('DOMContentLoaded', function() {
           // 기본값 저장
           chrome.storage.local.set(defaultSettings, function() {
             showStatus('모든 설정이 초기화되었습니다.', 'info');
+            
+            // 백그라운드 스크립트에 설정 초기화 알림
+            chrome.runtime.sendMessage({ 
+              action: 'settingsUpdated', 
+              settings: defaultSettings 
+            });
           });
         });
       });
@@ -169,6 +195,19 @@ document.addEventListener('DOMContentLoaded', function() {
   tokenScopeSelect.addEventListener('change', function() {
     if (this.value === 'sync' && githubTokenInput.value) {
       showStatus('주의: 토큰을 동기화하면 로그인한 모든 기기에서 토큰이 공유됩니다.', 'info');
+    }
+  });
+  
+  // UI 모드 변경 시 설명 업데이트
+  uiModeSelect.addEventListener('change', function() {
+    const mode = this.value;
+    
+    if (mode === 'sidebar') {
+      showStatus('사이드바 모드로 변경됩니다. 확장 프로그램 아이콘 클릭 시 사이드패널이 열립니다.', 'info');
+    } else if (mode === 'popup') {
+      showStatus('팝업 모드로 변경됩니다. 확장 프로그램 아이콘 클릭 시 팝업이 열립니다.', 'info');
+    } else if (mode === 'both') {
+      showStatus('듀얼 모드로 변경됩니다. 아이콘 클릭 시 팝업이 열리고, 사이드패널도 함께 열립니다.', 'info');
     }
   });
   

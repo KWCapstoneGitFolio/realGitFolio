@@ -182,11 +182,23 @@
     <div class="form-group">
       <label for="auto-update">자동 업데이트 설정</label>
       <div class="checkbox-group">
-        <input type="checkbox" id="auto-update">
+        <input type="checkbox" id="auto-update" checked>
         <span>데이터 자동 업데이트 사용</span>
       </div>
       <p class="helper-text">
         GitHub 페이지 방문 시 자동으로 데이터를 업데이트합니다. 비활성화하면 수동으로 새로고침해야 합니다.
+      </p>
+    </div>
+    
+    <!-- 새로 추가된 옵션: GitHub 페이지에서 자동 열기 -->
+    <div class="form-group">
+      <label for="auto-open-github">GitHub 페이지 자동 감지</label>
+      <div class="checkbox-group">
+        <input type="checkbox" id="auto-open-github" checked>
+        <span>GitHub 페이지 방문 시 사이드패널 자동 열기</span>
+      </div>
+      <p class="helper-text">
+        GitHub 웹사이트를 방문할 때 자동으로 GitFolio 사이드패널을 엽니다.
       </p>
     </div>
   </div>
@@ -232,8 +244,8 @@
     <div class="form-group">
       <label for="ui-mode">UI 모드</label>
       <select id="ui-mode">
-        <option value="popup">팝업 모드 (기본)</option>
-        <option value="sidebar">사이드바 모드</option>
+        <option value="sidebar" selected>사이드바 모드 (기본)</option>
+        <option value="popup">팝업 모드</option>
         <option value="both">둘 다 사용</option>
       </select>
       <p class="helper-text">

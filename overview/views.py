@@ -1,10 +1,12 @@
 from django.http import JsonResponse
-from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 from django.views.decorators.http import require_POST, require_GET
 import json
+import requests
+import os
 import traceback
 from django.middleware.csrf import get_token
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404
 from django.core.serializers.json import DjangoJSONEncoder
 from django.forms.models import model_to_dict
 
@@ -71,53 +73,84 @@ def generate_overview(request):
     웹 인터페이스에서 사용할 레포지토리 개요 생성 뷰
     """
     context = {}
+
+    # 1) 저장된 분석 링크 클릭(GET) 처리
+    if request.method == "GET" and request.GET.get('owner') and request.GET.get('repo') and request.GET.get('username'):
+        owner    = request.GET['owner']
+        repo     = request.GET['repo']
+        username = request.GET['username']
+        count    = request.GET.get('count') or 20
+
+        # 폼을 초기값으로 채우기
+        form = RepoOverviewForm(initial={
+            'owner': owner,
+            'repo': repo,
+            'username': username,
+            'count': count
+        })
+        context['form'] = form
+
+        # DB에서 기존 분석 결과 조회
+        repository = Repository.objects.filter(owner=owner, name=repo).first()
+        existing_analysis = CommitAnalysis.objects.filter(
+            repository=repository,
+            username=username
+        ).first() if repository else None
+
+        if existing_analysis:
+            # 저장된 분석 결과를 Markdown으로 변환하여 전달
+            context['analysis_md'] = format_analysis_md(existing_analysis.analysis_json)
+        else:
+            context['error'] = "저장된 분석이 없습니다."
+
+        return render(request, "overview/summary.html", context)
+
+    # 2) 신규 분석 요청(POST)
     if request.method == "POST":
         form = RepoOverviewForm(request.POST)
+        context['form'] = form
         if form.is_valid():
-            owner = form.cleaned_data['owner']
-            repo = form.cleaned_data['repo']
+            owner    = form.cleaned_data['owner']
+            repo     = form.cleaned_data['repo']
             username = form.cleaned_data['username']
-            count = form.cleaned_data.get('count') or 20
+            count    = form.cleaned_data.get('count') or 20
+
             try:
-                # 커밋 가져오기 & DB 저장 - API 응답 구조를 그대로 유지
+                # 커밋 조회 및 DB 저장
                 commits = fetch_detailed_commit_history(owner, repo, username, count, save_to_db=True)
                 context['commits'] = commits
-                
-                # 분석 실행 & DB 저장 - 오류 처리 개선
+
+                # 분석 결과가 DB에 있으면 재사용, 없으면 새로 호출
                 try:
-                    # DB에 저장된 분석 결과가 있는지 확인
-                    try:
-                        repository = Repository.objects.get(owner=owner, name=repo)
-                        existing_analysis = CommitAnalysis.objects.filter(
-                            repository=repository, 
-                            username=username
-                        ).first()
-                        
-                        if existing_analysis:
-                            analysis = existing_analysis.analysis_json
-                            print("DB에 저장된 분석 결과를 사용합니다.")
-                        else:
-                            # 새로 분석 실행
-                            analysis = analyze_commit_messages(commits, owner, repo, username, save_to_db=True)
-                    except (Repository.DoesNotExist, CommitAnalysis.DoesNotExist):
-                        # 저장소 또는 분석 결과가 없으면 새로 분석
+                    repository = Repository.objects.filter(owner=owner, name=repo).first()
+                    existing_analysis = CommitAnalysis.objects.filter(
+                        repository=repository,
+                        username=username
+                    ).first() if repository else None
+
+                    if existing_analysis:
+                        context['warning'] = "이미 생성된 개요입니다!"
+                        analysis = existing_analysis.analysis_json
+                    else:
                         analysis = analyze_commit_messages(commits, owner, repo, username, save_to_db=True)
-                    
+
                 except Exception as e:
-                    print(f"분석 중 오류 발생: {str(e)}")
+                    print(f"분석 중 오류 발생: {e}")
                     print(traceback.format_exc())
-                    # 오류 발생 시 기본 분석 결과 사용
                     analysis = generate_default_analysis()
-                
-                formatted_analysis = format_analysis_md(analysis)
-                context['analysis'] = formatted_analysis
+
+                # Markdown으로 포맷팅
+                context['analysis_md'] = format_analysis_md(analysis)
+
             except Exception as e:
                 context['error'] = str(e)
-                print(f"뷰 처리 중 오류: {str(e)}")
+                print(f"뷰 처리 중 오류: {e}")
                 print(traceback.format_exc())
-    else:
-        form = RepoOverviewForm()
-    
+
+        return render(request, "overview/summary.html", context)
+
+    # 3) 기타 GET 요청: 빈 폼 표시
+    form = RepoOverviewForm()
     context['form'] = form
     return render(request, "overview/summary.html", context)
 
@@ -247,5 +280,72 @@ def save_commits_api(request):
         })
     except Exception as e:
         print(f"API 요청 처리 중 오류: {str(e)}")
+        print(traceback.format_exc())
+        return JsonResponse({'error': str(e)}, status=500)
+
+@require_GET
+def list_saved_analyses(request):
+    analyses = (
+        CommitAnalysis.objects
+        .select_related('repository')
+        .order_by('-created_at')
+    )
+    return render(request, "overview/saved_list.html", {
+        'analyses': analyses
+    })
+
+@require_POST
+def delete_saved_analysis(request, analysis_id):
+    analysis = get_object_or_404(CommitAnalysis, id=analysis_id)
+    analysis.delete()
+    return redirect('list_saved_analyses')
+
+@csrf_exempt
+@require_POST
+def github_token_exchange(request):
+    print("GitHub 토큰 교환 요청 받음")  # 디버깅 로그
+    try:
+        data = json.loads(request.body)
+        code = data.get('code')
+        
+        print(f"인증 코드: {code[:10]}...")  # 코드 일부만 출력 (보안)
+        
+        if not code:
+            print("인증 코드 없음")
+            return JsonResponse({'error': '인증 코드가 없습니다.'}, status=400)
+        
+        # GitHub 클라이언트 ID와 시크릿 확인
+        client_id = os.getenv('GITHUB_CLIENT_ID')
+        client_secret = os.getenv('GITHUB_CLIENT_SECRET')
+        
+        if not client_id or not client_secret:
+            print("GitHub 클라이언트 ID 또는 시크릿이 설정되지 않음")
+            return JsonResponse({'error': 'GitHub OAuth 설정이 완료되지 않았습니다.'}, status=500)
+        
+        print(f"GitHub API 요청 준비: 클라이언트 ID {client_id[:5]}...")
+        
+        # GitHub에 액세스 토큰 요청
+        response = requests.post(
+            'https://github.com/login/oauth/access_token',
+            data={
+                'client_id': 'Ov23liLC4Ji14gq8rjIw',
+                'client_secret': 'b822ea12394ce15e64b181f5ab3fc8fcfb65a397',
+                'code': code
+            },
+            headers={'Accept': 'application/json'}
+        )
+        
+        print(f"GitHub API 응답 상태 코드: {response.status_code}")
+        
+        if response.status_code != 200:
+            print(f"GitHub API 오류 응답: {response.text}")
+            return JsonResponse({'error': '토큰 교환 실패'}, status=400)
+        
+        token_data = response.json()
+        print("토큰 교환 성공: 액세스 토큰 발급됨")
+        return JsonResponse(token_data)
+    
+    except Exception as e:
+        print(f"토큰 교환 처리 중 오류: {str(e)}")
         print(traceback.format_exc())
         return JsonResponse({'error': str(e)}, status=500)

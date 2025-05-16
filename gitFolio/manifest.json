@@ -9,14 +9,15 @@
     "storage",
     "activeTab",
     "tabs",
-    "sidePanel"
+    "sidePanel",
+    "identity"
   ],
   "host_permissions": [
     "http://localhost:8000/*",
     "https://github.com/*"
   ],
   "action": {
-    "default_popup": "popup/popup.html",
+    "default_title": "GitFolio 사이드패널 열기",
     "default_icon": {
       "16": "icons/icon16.png",
       "48": "icons/icon48.png",
@@ -38,7 +39,7 @@
   "options_page": "options/options.html",
   "web_accessible_resources": [
     {
-      "resources": ["lib/marked.min.js", "icons/*", "sidepanel/*"],
+      "resources": ["lib/marked.min.js", "icons/*", "sidepanel/*", "popup/*"],
       "matches": ["<all_urls>"]
     }
   ],

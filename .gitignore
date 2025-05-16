@@ -3,5 +3,9 @@
 *.pyc
 __pycache__/
 .DS_Store
+<<<<<<< Updated upstream
 .env
-.DS_Store
+=======
+.env
+>>>>>>> Stashed changes
+env.zip

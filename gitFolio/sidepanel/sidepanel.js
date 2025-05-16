@@ -23,17 +23,148 @@ document.addEventListener('DOMContentLoaded', function() {
   checkLoginStatus();
   
   // 로그인 버튼 이벤트 리스너
-  if (githubLoginBtn) {
-    githubLoginBtn.addEventListener('click', function() {
-      console.log("GitHub 로그인 버튼 클릭됨");
-      // GitHub OAuth 로그인 페이지로 리디렉션
-      // 실제 구현 시 OAuth 프로세스 구현 필요
-      chrome.tabs.create({
-        url: 'https://github.com/login/oauth/authorize?client_id=YOUR_CLIENT_ID&redirect_uri=YOUR_REDIRECT_URI&scope=user,repo'
-      });
-    });
-  }
+if (githubLoginBtn) {
+  githubLoginBtn.addEventListener('click', function() {
+    console.log("GitHub 로그인 버튼 클릭됨");
+    initiateGitHubOAuth();
+  });
+}
+
+// GitHub OAuth 인증 시작 함수
+function initiateGitHubOAuth() {
+  // GitHub 개발자 설정에서 생성한 클라이언트 ID
+  const clientId = 'Ov23liLC4Ji14gq8rjIw';
   
+  // Chrome 확장 프로그램의 리다이렉트 URL
+  const redirectUrl = chrome.identity.getRedirectURL();
+  console.log("OAuth 리다이렉트 URL:", redirectUrl);
+  
+  // 요청할 권한 범위
+  const scope = 'repo,user';
+  
+  // GitHub 인증 URL 생성
+  const authUrl = 
+    `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUrl)}&scope=${scope}`;
+  
+  // Chrome Identity API를 사용하여 인증 진행
+  chrome.identity.launchWebAuthFlow(
+    {
+      url: authUrl,
+      interactive: true
+    },
+    function(responseUrl) {
+      if (chrome.runtime.lastError) {
+        console.error("인증 오류:", chrome.runtime.lastError);
+        errorMessage.textContent = "GitHub 로그인에 실패했습니다.";
+        errorMessage.style.display = 'block';
+        return;
+      }
+      
+      if (responseUrl) {
+        // URL에서 코드 추출
+        const url = new URL(responseUrl);
+        const code = url.searchParams.get('code');
+        
+        if (code) {
+          // 코드를 액세스 토큰으로 교환
+          exchangeCodeForToken(code);
+        } else {
+          console.error("인증 코드가 없습니다");
+          errorMessage.textContent = "인증 코드를 받을 수 없습니다.";
+          errorMessage.style.display = 'block';
+        }
+      }
+    }
+  );
+}
+
+// 인증 코드를 액세스 토큰으로 교환
+async function exchangeCodeForToken(code) {
+  try {
+    // 백엔드 URL 가져오기
+    const backendUrl = await getBackendUrl();
+    
+    // 백엔드 서버에 코드 전송하여 토큰 교환 요청
+    const response = await fetch(`${backendUrl}/overview/auth/github/token/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ code })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`토큰 교환 실패: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    if (data.access_token) {
+      // 액세스 토큰 저장
+      chrome.storage.local.set({
+        githubToken: data.access_token,
+        tokenTimestamp: Date.now()
+      }, function() {
+        console.log("GitHub 토큰 저장됨");
+        
+        // 토큰을 사용하여 사용자 정보 가져오기
+        fetchUserProfile(data.access_token);
+      });
+    } else {
+      throw new Error("액세스 토큰이 응답에 없습니다.");
+    }
+  } catch (error) {
+    console.error("토큰 교환 오류:", error);
+    errorMessage.textContent = `로그인 처리 오류: ${error.message}`;
+    errorMessage.style.display = 'block';
+  }
+}
+
+// GitHub API를 사용하여 사용자 프로필 가져오기
+async function fetchUserProfile(token) {
+  try {
+    const response = await fetch('https://api.github.com/user', {
+      headers: {
+        'Authorization': `token ${token}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`사용자 정보 가져오기 실패: ${response.status}`);
+    }
+    
+    const userData = await response.json();
+    console.log("GitHub 사용자 정보:", userData);
+    
+    // 사용자 정보 저장
+    chrome.storage.local.set({
+      githubUsername: userData.login,
+      githubAvatar: userData.avatar_url,
+      githubName: userData.name || userData.login,
+      isLoggedIn: true
+    }, function() {
+      console.log("GitHub 사용자 정보 저장됨");
+      
+      // 사용자 정보 가져오기 성공 후 메인 인터페이스 표시
+      showMainInterface(true);
+      
+      // 사용자 이름 필드 업데이트
+      const usernameField = document.getElementById('username');
+      if (usernameField) {
+        usernameField.value = userData.login;
+      }
+      
+      // 경고 메시지 숨기기
+      if (noLoginWarning) {
+        noLoginWarning.style.display = 'none';
+      }
+    });
+  } catch (error) {
+    console.error("사용자 프로필 가져오기 오류:", error);
+    // 오류가 있어도 메인 인터페이스는 표시
+    showMainInterface(false);
+  }
+}
   // 로그인 건너뛰기 버튼 이벤트 리스너
   if (skipLoginBtn) {
     skipLoginBtn.addEventListener('click', function() {
