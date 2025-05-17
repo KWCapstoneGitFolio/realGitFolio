@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>저장된 개요 목록</title>
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    .analysis-item { margin-bottom: 15px; border-bottom: 1px solid #ccc; padding-bottom: 10px; }
+    .delete-btn { margin-left: 10px; color: red; cursor: pointer; }
+    .analysis-detail { margin-top: 10px; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>저장된 개요 목록</h1>
+  {% if analyses %}
+    {% for analysis in analyses %}
+      <div class="analysis-item">
+        <strong>{{ analysis.repository.owner }}/{{ analysis.repository.name }} - {{ analysis.username }}</strong>
+        <button onclick="viewDetail({{ analysis.id }})">열람</button>
+        <a href="{% url 'delete_saved_analysis' analysis.id %}">삭제</a>
+        <div id="detail-{{ analysis.id }}" class="analysis-detail"></div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p>저장된 개요가 없습니다.</p>
+  {% endif %}
+
+  <script>
+    async function viewDetail(id) {
+      const detailDiv = document.getElementById('detail-' + id);
+      if (detailDiv.innerHTML.trim() !== '') {
+        detailDiv.innerHTML = '';
+        return;
+      }
+
+      const response = await fetch(`/overview/api/saved/${id}/`);
+      const data = await response.json();
+      detailDiv.innerText = data.markdown;
+    }
+  </script>
+</body>
+</html>

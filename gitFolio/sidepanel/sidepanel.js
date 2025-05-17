@@ -18,6 +18,20 @@ document.addEventListener('DOMContentLoaded', function() {
   const errorMessage = document.getElementById('error-message');
   const commitListSection = document.getElementById('commit-list');
   const noLoginWarning = document.getElementById('no-login-warning');
+  const savedListContainer = document.getElementById('saved-list-container');
+  const savedListResult = document.getElementById('saved-list-result');
+  const backToMainBtn = document.getElementById('back-to-main');
+
+  function showSavedListView() {
+  mainContainer.style.display = 'none';
+  savedListContainer.style.display = 'block';
+  loadSavedListData();
+}
+
+function backToMainView() {
+  savedListContainer.style.display = 'none';
+  mainContainer.style.display = 'block';
+}
   
   // 로그인 상태 확인
   checkLoginStatus();
@@ -244,6 +258,149 @@ async function fetchUserProfile(token) {
       });
     });
   }
+
+  async function loadSavedOverviews() {
+  const backendUrl = await getBackendUrl();
+  const url = `${backendUrl}/overview/saved/`;
+  window.open(url, '_blank');
+}
+
+  async function loadSavedAnalysisList() {
+  const backendUrl = await getBackendUrl();
+  const response = await fetch(`${backendUrl}/overview/api/saved/`, { credentials: 'include' });
+  if (!response.ok) {
+    console.error('저장된 개요 목록 불러오기 실패:', response.status);
+    return;
+  }
+  const data = await response.json();
+  displaySavedAnalysisList(data.analyses);
+}
+
+function displaySavedAnalysisList(analyses) {
+  const resultElement = document.getElementById('result');
+  resultElement.innerHTML = '';
+
+  if (!analyses.length) {
+    resultElement.textContent = '저장된 개요가 없습니다.';
+    return;
+  }
+
+  analyses.forEach(analysis => {
+    const item = document.createElement('div');
+    item.textContent = `${analysis.owner}/${analysis.repo} - ${analysis.username}`;
+    item.style.cursor = 'pointer';
+    item.style.marginBottom = '8px';
+    item.addEventListener('click', () => {
+      loadSavedAnalysisDetail(analysis.id);
+    });
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.textContent = '삭제';
+    deleteBtn.style.marginLeft = '8px';
+    deleteBtn.addEventListener('click', () => {
+      deleteSavedAnalysis(analysis.id);
+    });
+
+    item.appendChild(deleteBtn);
+    resultElement.appendChild(item);
+  });
+}
+
+async function loadSavedAnalysisDetail(analysisId) {
+  const backendUrl = await getBackendUrl();
+  const response = await fetch(`${backendUrl}/overview/api/saved/${analysisId}/`, { credentials: 'include' });
+  if (!response.ok) {
+    console.error('저장된 개요 불러오기 실패:', response.status);
+    return;
+  }
+  const data = await response.json();
+  document.getElementById('result').innerText = data.markdown;
+}
+
+async function deleteSavedAnalysis(analysisId) {
+  const backendUrl = await getBackendUrl();
+  const response = await fetch(`${backendUrl}/overview/api/saved/${analysisId}/delete/`, {
+    method: 'POST',
+    credentials: 'include'
+  });
+
+  if (response.ok) {
+    console.log('삭제 성공');
+    loadSavedAnalysisList();  // 목록 새로고침
+  } else {
+    console.error('삭제 실패:', response.status);
+  }
+}
+
+  async function loadSavedListData() {
+  const backendUrl = await getBackendUrl();
+  const response = await fetch(`${backendUrl}/overview/api/saved/`, { credentials: 'include' });
+  if (!response.ok) {
+    savedListResult.textContent = '목록을 불러오지 못했습니다.';
+    return;
+  }
+
+  const data = await response.json();
+  if (data.analyses.length === 0) {
+    savedListResult.textContent = '저장된 개요가 없습니다.';
+    return;
+  }
+
+  savedListResult.innerHTML = '';
+  data.analyses.forEach(analysis => {
+    const item = document.createElement('div');
+    item.textContent = `${analysis.owner}/${analysis.repo} - ${analysis.username}`;
+    item.style.marginBottom = '8px';
+    item.style.cursor = 'pointer';
+
+    // 개요 열람
+    item.addEventListener('click', () => loadAndShowAnalysisDetail(analysis.id));
+
+    // 삭제 버튼
+    const deleteBtn = document.createElement('button');
+    deleteBtn.textContent = '삭제';
+    deleteBtn.style.marginLeft = '8px';
+    deleteBtn.addEventListener('click', (e) => {
+      e.stopPropagation();  // 삭제 시 목록 클릭 이벤트 차단
+      deleteSavedAnalysisInList(analysis.id);
+    });
+
+    item.appendChild(deleteBtn);
+    savedListResult.appendChild(item);
+  });
+}
+
+async function loadAndShowAnalysisDetail(analysisId) {
+  const backendUrl = await getBackendUrl();
+  const response = await fetch(`${backendUrl}/overview/api/saved/${analysisId}/`, { credentials: 'include' });
+  if (!response.ok) {
+    savedListResult.textContent = '개요를 불러오지 못했습니다.';
+    return;
+  }
+  const data = await response.json();
+  savedListResult.innerText = data.markdown;
+}
+
+  async function deleteSavedAnalysisInList(analysisId) {
+  const backendUrl = await getBackendUrl();
+  const csrfToken = await fetchCsrfToken(backendUrl);
+
+  const response = await fetch(`${backendUrl}/overview/api/saved/${analysisId}/delete/`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': csrfToken,  // CSRF 토큰 추가
+    },
+    credentials: 'include'
+  });
+
+  if (response.ok) {
+    console.log('삭제 성공');
+    loadSavedListData();  // 목록 새로고침
+  } else {
+    console.error('삭제 실패:', response.status);
+  }
+}
   
   // 안전한 날짜 파싱 함수
   function formatDate(dateString) {
@@ -834,6 +991,18 @@ async function fetchUserProfile(token) {
       }, 300);
     }, 3000);
   }
+
+
+    // '저장된 개요 목록 보기' 버튼 클릭 시 목록 화면으로 이동
+const goToSavedListBtn = document.getElementById('go-to-saved-list');
+if (goToSavedListBtn) {
+  goToSavedListBtn.addEventListener('click', showSavedListView);
+}
+
+// '뒤로가기' 버튼 클릭 시 메인 화면으로 이동
+if (backToMainBtn) {
+  backToMainBtn.addEventListener('click', backToMainView);
+}
   
   // 저장된 GitHub 사용자명 로드
   chrome.storage.local.get('githubUsername', function(data) {

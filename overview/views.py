@@ -1,4 +1,5 @@
 from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 from django.views.decorators.http import require_POST, require_GET
 import json
@@ -349,3 +350,34 @@ def github_token_exchange(request):
         print(f"토큰 교환 처리 중 오류: {str(e)}")
         print(traceback.format_exc())
         return JsonResponse({'error': str(e)}, status=500)
+
+@require_GET
+def list_saved_analyses_api(request):
+    analyses = CommitAnalysis.objects.select_related('repository').order_by('-created_at')
+    result = [{
+        'id': analysis.id,
+        'owner': analysis.repository.owner,
+        'repo': analysis.repository.name,
+        'username': analysis.username,
+        'created_at': analysis.created_at.isoformat()
+    } for analysis in analyses]
+    return JsonResponse({'analyses': result})
+
+@require_GET
+def get_saved_analysis_api(request, analysis_id):
+    analysis = get_object_or_404(CommitAnalysis, id=analysis_id)
+    return JsonResponse({
+        'id': analysis.id,
+        'owner': analysis.repository.owner,
+        'repo': analysis.repository.name,
+        'username': analysis.username,
+        'commit_count': analysis.commit_count,
+        'analysis': analysis.analysis_json,
+        'markdown': format_analysis_md(analysis.analysis_json)
+    })
+
+@require_http_methods(["DELETE"])
+def delete_saved_analysis_api(request, analysis_id):
+    analysis = get_object_or_404(CommitAnalysis, id=analysis_id)
+    analysis.delete()
+    return JsonResponse({'success': True})

@@ -53,6 +53,73 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
+  async function loadSavedAnalysisList() {
+  const backendUrl = await getBackendUrl();
+  const response = await fetch(`${backendUrl}/overview/saved/`, { credentials: 'include' });
+  if (!response.ok) {
+    console.error('저장된 개요 목록 불러오기 실패:', response.status);
+    return;
+  }
+  const data = await response.json();
+  displaySavedAnalysisList(data.analyses);
+}
+
+function displaySavedAnalysisList(analyses) {
+  const resultElement = document.getElementById('result');
+  resultElement.innerHTML = '';
+
+  if (!analyses.length) {
+    resultElement.textContent = '저장된 개요가 없습니다.';
+    return;
+  }
+
+  analyses.forEach(analysis => {
+    const item = document.createElement('div');
+    item.textContent = `${analysis.repository.owner}/${analysis.repository.name} - ${analysis.username}`;
+    item.style.cursor = 'pointer';
+    item.style.marginBottom = '8px';
+    item.addEventListener('click', () => {
+      loadSavedAnalysisDetail(analysis.id);
+    });
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.textContent = '삭제';
+    deleteBtn.style.marginLeft = '8px';
+    deleteBtn.addEventListener('click', () => {
+      deleteSavedAnalysis(analysis.id);
+    });
+
+    item.appendChild(deleteBtn);
+    resultElement.appendChild(item);
+  });
+}
+
+async function loadSavedAnalysisDetail(analysisId) {
+  const backendUrl = await getBackendUrl();
+  const response = await fetch(`${backendUrl}/overview/api/saved/${analysisId}/`, { credentials: 'include' });
+  if (!response.ok) {
+    console.error('저장된 개요 불러오기 실패:', response.status);
+    return;
+  }
+  const data = await response.json();
+  document.getElementById('result').innerText = data.analysis_md;
+}
+
+async function deleteSavedAnalysis(analysisId) {
+  const backendUrl = await getBackendUrl();
+  const response = await fetch(`${backendUrl}/overview/api/saved/${analysisId}/delete/`, {
+    method: 'POST',
+    credentials: 'include'
+  });
+
+  if (response.ok) {
+    console.log('삭제 성공');
+    loadSavedAnalysisList();  // 목록 새로고침
+  } else {
+    console.error('삭제 실패:', response.status);
+  }
+}
+
   // 커밋 목록 로드 함수
   async function loadCommitList(backendUrl, owner, repo, username, count) {
     try {
@@ -405,6 +472,12 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 
+  const loadOverviewsBtn = document.getElementById('loadOverviews');
+    if (loadOverviewsBtn) {
+      loadOverviewsBtn.addEventListener('click', loadSavedAnalysisList);  // 이름 바꾸기
+    }
+
+
   // 저장된 데이터 로드
   chrome.storage.local.get('githubUsername', function(data) {
     if (data.githubUsername) {
@@ -415,3 +488,4 @@ document.addEventListener('DOMContentLoaded', function() {
   
   console.log("팝업 초기화 완료");
 });
+

@@ -347,7 +347,9 @@ def call_anthropic_api(commit_messages, owner=None, repo=None, username=None, sa
         
         # 응답 상태 코드 확인
         if response.status_code != 200:
-            print(f"응답 내용: {response.text[:500]}...")
+            #print(f"응답 내용: {response.text[:500]}...")
+            print("응답 전체 내용:")
+            print(response.text)
             raise Exception(f"Anthropic API 오류 (상태 코드 {response.status_code}): {response.text}")
         
         # 응답 파싱
