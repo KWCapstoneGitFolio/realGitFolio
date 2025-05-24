@@ -65,6 +65,11 @@
           <button type="submit" id="generate-btn">개요 생성</button>
           <button type="button" id="auto-fill-btn">현재 페이지에서 가져오기</button>
         </div>
+        
+        <!-- 저장된 개요 불러오기 버튼 추가 -->
+        <div class="form-additional-actions">
+          <button type="button" id="go-to-saved-list" class="secondary-button">저장된 개요 불러오기</button>
+        </div>
       </form>
 
       <div id="loading" class="loading" style="display: none;">
@@ -80,7 +85,6 @@
           <button id="copy-btn">결과 복사</button>
           <button id="download-btn">Markdown 다운로드</button>
           <button id="save-btn">저장하기</button>
-            <button id="go-to-saved-list">저장된 개요 불러오기</button>
         </div>
       </div>
 
@@ -88,12 +92,12 @@
       <div id="commit-list" class="commit-list-section" style="display: none;"></div>
     </div>
 
-      <!-- 저장된 개요 목록 화면 -->
-<div id="saved-list-container" style="display: none;">
-  <h2>저장된 개요 목록</h2>
-  <div id="saved-list-result"></div>
-  <button id="back-to-main">뒤로가기</button>
-</div>
+    <!-- 저장된 개요 목록 화면 -->
+    <div id="saved-list-container" style="display: none;">
+      <h2>저장된 개요 목록</h2>
+      <div id="saved-list-result"></div>
+      <button id="back-to-main">뒤로가기</button>
+    </div>
   </div>
   
   <script src="sidepanel.js"></script>

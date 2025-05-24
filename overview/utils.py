@@ -331,7 +331,7 @@ def call_anthropic_api(commit_messages, owner=None, repo=None, username=None, sa
         "anthropic-version": "2023-06-01"
     }
     data = {
-        "model": "claude-3-7-sonnet-20250219",
+        "model": "claude-sonnet-4-20250514",
         "system": "GitHub 커밋 메시지를 분석하여 프로젝트 정보를 JSON 형태로 추출하는 도우미입니다. 모든 필드를 최대한 자세히 분석해주세요.",
         "messages": [
           {"role": "user", "content": prompt}
