@@ -88,14 +88,6 @@ realGitFolio/
 
 ---
 
-## 🧪 테스트
-
-```bash
-(venv)$ python manage.py test      # Django 기본 테스트
-(venv)$ pytest                     # (예정) PyTest 이전
-```
-
----
 
 ## 🙏 참고 & 감사
 
