@@ -57,6 +57,10 @@ $ python -m venv venv && source venv/bin/activate       # Windows → .\venv\Scr
 1. 브라우저에서 [http://127.0.0.1:8000/](http://127.0.0.1:8000/) 접속 → GitHub 로그인
 2. `/overview/generate` 주소창 입력 → 개인 포트폴리오 생성
 
+* 다른 실행 방법
+  -> chrome 확장 프로그램 -> 압축해제된 확장프로그램 로드 -> 해당경로\realGitFolio\gitFolio 로드
+  
+
 ---
 
 ## 🗂️ 프로젝트 구조
@@ -120,3 +124,4 @@ realGitFolio/
 ## 실행할 때 주의사항
 
 * `.env`에서 `GITHUB_TOKEN`, `MYSQL_PASSWORD`, `ANTHROPIC_API_KEY` 부분을 자신이 설정한 키나 데이터베이스 패스워드로 바꿔주시기 바랍니다.
+
