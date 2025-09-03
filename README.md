@@ -46,7 +46,7 @@ $ python -m venv venv && source venv/bin/activate       # Windows → .\venv\Scr
 # 3) .env 설정 (샘플: .env_readme)
 #    GITHUB_TOKEN=ghp_xxx
 #    ANTHROPIC_API_KEY=sk-ant-xxx
-#    MYSQL_USER=gitfolio
+#    MYSQL_USER=gitfolio   (or root)
 #    MYSQL_PASSWORD=your_db_pw
 
 # 4) DB 마이그레이션 & 서버 실행
@@ -124,4 +124,5 @@ realGitFolio/
 ## 실행할 때 주의사항
 
 * `.env`에서 `GITHUB_TOKEN`, `MYSQL_PASSWORD`, `ANTHROPIC_API_KEY` 부분을 자신이 설정한 키나 데이터베이스 패스워드로 바꿔주시기 바랍니다.
+
 
